@@ -1,12 +1,12 @@
-name: FB_Auto_Bot
+name: FB_Continuous_Bot
 
 on:
   schedule:
-    - cron: '0 8 * * *' # Runs at 8:00 AM UTC (approx. 11:00 AM EAT)
-  workflow_dispatch: # Allows manual run button in GitHub
+    - cron: '0 */5 * * *' # Runs every 5 hours
+  workflow_dispatch: # Allows you to trigger it manually anytime
 
 jobs:
-  automation:
+  run-automation:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -23,9 +23,9 @@ jobs:
       - name: Run Script
         run: python bot.py
 
-      - name: Upload Error Screenshot
+      - name: Save Failure Image
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: failure-evidence
+          name: bot-eyes
           path: fail_screenshot.png
