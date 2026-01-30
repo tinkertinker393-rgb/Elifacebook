@@ -1,12 +1,14 @@
-name: FB_Continuous_Bot
+name: FB_Immediate_Bot_247
 
 on:
   schedule:
-    - cron: '0 */5 * * *' # Runs every 5 hours
-  workflow_dispatch: # Allows you to trigger it manually anytime
+    - cron: '0 */6 * * *' # Backup trigger every 6 hours
+  workflow_dispatch:      # Manual trigger
+  repository_dispatch:    # The "Self-Restart" trigger
+    types: [restart_bot]
 
 jobs:
-  run-automation:
+  automation:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -15,17 +17,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install Selenium
         run: pip install selenium
 
-      - name: Run Script
-        run: python bot.py
+      - name: Start 24/7 Monitoring
+        # timeout 5h 50m keeps it under GitHub's 6h hard limit
+        run: |
+          timeout 350m python bot.py || true 
 
-      - name: Save Failure Image
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - name: Self-Restart
+        if: always() # Runs even if the script timed out
+        uses: peter-evans/repository-dispatch@v2
         with:
-          name: bot-eyes
-          path: fail_screenshot.png
+          token: ${{ secrets.MY_RESTART_TOKEN }}
+          event-type: restart_bot
